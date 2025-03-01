@@ -1,4 +1,4 @@
-name: FD-j3s - clang-r547379 tester debug
+name: FD-j3s - neutron tester debug
 
 on:
   pull_request:

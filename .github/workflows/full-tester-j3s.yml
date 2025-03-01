@@ -156,9 +156,7 @@ jobs:
           cp alioth-effcpu-dtb-2 AnyKernel3/alioth-effcpu-dtb-2 || true
           cp alioth-miui-dtbo-2.img AnyKernel3/alioth-miui-dtbo-2.img || true
           cd AnyKernel3
-          zip -q -r FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
           zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
-          mv FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip ../
 
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4

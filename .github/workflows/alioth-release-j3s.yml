@@ -1,4 +1,4 @@
-name: ${{ github.event.inputs.BUILD_TITLE || 'FD-j3s - Clang-r547379 release full build (3 Kernel Trees)' }}
+name: FD-stk - clang-r547379 release full build
 
 on:
   pull_request:
@@ -48,7 +48,8 @@ jobs:
         type: [original, modified]
     runs-on: ubuntu-latest
     env:
-      UPLOAD_TO_RELEASE: false # Moved here to reduce input count
+      BUILD_TITLE: ${{ github.event.inputs.BUILD_TITLE || 'FD-j3s - Clang-r547379 release full build (3 Kernel Trees)' }}
+      UPLOAD_TO_RELEASE: false
 
     steps:
       - name: Install Dependencies
@@ -60,10 +61,13 @@ jobs:
           mkdir clang
           tar -xf clang.tar.gz -C clang
 
+      - name: Set Kernel Variables
+        run: |
+          echo "KERNEL_TREE=$(eval echo \${{ github.event.inputs.KERNEL_TREE_${{ matrix.kernel }} }})" >> $GITHUB_ENV
+          echo "KERNEL_TREE_BRANCH=$(eval echo \${{ github.event.inputs.KERNEL_TREE_BRANCH_${{ matrix.kernel }} }})" >> $GITHUB_ENV
+
       - name: Checkout Kernel
         run: |
-          KERNEL_TREE=$(eval echo \${{ github.event.inputs.KERNEL_TREE_${{ matrix.kernel }} }})
-          KERNEL_TREE_BRANCH=$(eval echo \${{ github.event.inputs.KERNEL_TREE_BRANCH_${{ matrix.kernel }} }})
           git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
       - name: Apply Patches

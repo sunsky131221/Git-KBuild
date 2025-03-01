@@ -144,9 +144,16 @@ jobs:
     needs: [build_original, build_modified]
     runs-on: ubuntu-latest
     steps:
-      - name: Download Kernel Artifacts
+      - name: Download Original Kernel
         uses: actions/download-artifact@v4
         with:
+          name: original-build
+          path: .
+
+      - name: Download Modified Kernel
+        uses: actions/download-artifact@v4
+        with:
+          name: modified-build
           path: .
 
       - name: Clone AnyKernel3
@@ -155,10 +162,17 @@ jobs:
       - name: Add Kernel Images to AnyKernel3
         run: |
           cp Image-original.gz AnyKernel3/Image.gz
-          cp dtb-original.img AnyKernel3/alioth-normal-dtb || true
-          cp dtb-modified.img AnyKernel3/alioth-effcpu-dtb || true
-          cp dtbo-original.img AnyKernel3/alioth-aosp-dtbo.img || true
-          cp dtbo-modified.img AnyKernel3/alioth-miui-dtbo.img || true
+          if [ -e "dtb-original.img" ]; then
+          mv -f dtb-original.img dtb1
+          cp -f dtb1 AnyKernel3/alioth-normal-dtb
+          fi
+          if [ -e "dtb-modified.img" ]; then
+          mv -f dtb-modified.img dtb2
+          cp -f dtb2 AnyKernel3/alioth-effcpu-dtb2
+          fi
+          cp dtbo-original.img AnyKernel3/dtbo.img || true
+          cp Image-modified.gz AnyKernel3/Image-modified.gz
+          cp dtbo-modified.img AnyKernel3/dtbo-modified.img || true
           cd AnyKernel3
           zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
 
@@ -185,3 +199,6 @@ jobs:
           files: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
           name: ${{ github.event.inputs.CODENAME }}-${{ github.run_id }}-MAGIC
           tag_name: ${{ github.run_id }}
+          body: |
+            **${{ github.event.inputs.BUILD_TITLE || github.event.inputs.CODENAME }}**
+            Kernel successfully built! 🎉

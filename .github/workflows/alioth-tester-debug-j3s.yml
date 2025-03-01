@@ -168,11 +168,10 @@ jobs:
           fi
           if [ -e "dtb-modified.img" ]; then
           mv -f dtb-modified.img dtb2
-          cp -f dtb2 AnyKernel3/alioth-effcpu-dtb2
+          cp -f dtb2 AnyKernel3/alioth-effcpu-dtb
           fi
-          cp dtbo-original.img AnyKernel3/dtbo.img || true
-          cp Image-modified.gz AnyKernel3/Image-modified.gz
-          cp dtbo-modified.img AnyKernel3/dtbo-modified.img || true
+          cp dtbo-original.img AnyKernel3/alioth-aosp-dtbo.img || true
+          cp dtbo-modified.img AnyKernel3/alioth-miui-dtbo.img || true
           cd AnyKernel3
           zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
 

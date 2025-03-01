@@ -1,4 +1,4 @@
-name: FD-j3s - clang-r547379 release full build (3 Kernel Trees)
+name: ${{ github.event.inputs.BUILD_TITLE || 'FD-j3s - clang-r547379 release full build (3 Kernel Trees)' }}
 
 on:
   pull_request:
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Dependencies
-        run: sudo apt install flex libncurses6
+        run: sudo apt install flex libncurses6 -y
       
       - name: Download & Extract Clang
         run: |
@@ -67,8 +67,8 @@ jobs:
       
       - name: Checkout Kernel
         run: |
-          KERNEL_TREE=$(eval echo \${{ github.event.inputs.KERNEL_TREE_${{ matrix.kernel }} }})
-          KERNEL_TREE_BRANCH=$(eval echo \${{ github.event.inputs.KERNEL_TREE_BRANCH_${{ matrix.kernel }} }})
+          KERNEL_TREE=${{ github.event.inputs[format('KERNEL_TREE_{0}', matrix.kernel)] }}
+          KERNEL_TREE_BRANCH=${{ github.event.inputs[format('KERNEL_TREE_BRANCH_{0}', matrix.kernel)] }}
           git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
       
       - name: Apply Patches

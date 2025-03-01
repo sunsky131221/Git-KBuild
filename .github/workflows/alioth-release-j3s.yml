@@ -1,4 +1,4 @@
-name: FD-j3s - clang-r547379 release full build
+name: FD-j3s - Clang-r547379 release full build (3 Kernel Trees)
 
 on:
   pull_request:
@@ -48,8 +48,7 @@ jobs:
         type: [original, modified]
     runs-on: ubuntu-latest
     env:
-      BUILD_TITLE: ${{ github.event.inputs.BUILD_TITLE || 'FD-j3s - Clang-r547379 release full build (3 Kernel Trees)' }}
-      UPLOAD_TO_RELEASE: false
+      UPLOAD_TO_RELEASE: false # Reduced input count
 
     steps:
       - name: Install Dependencies
@@ -61,14 +60,19 @@ jobs:
           mkdir clang
           tar -xf clang.tar.gz -C clang
 
-      - name: Set Kernel Variables
+      - name: Set Kernel Environment Variables
         run: |
-          echo "KERNEL_TREE=$(eval echo \${{ github.event.inputs.KERNEL_TREE_${{ matrix.kernel }} }})" >> $GITHUB_ENV
-          echo "KERNEL_TREE_BRANCH=$(eval echo \${{ github.event.inputs.KERNEL_TREE_BRANCH_${{ matrix.kernel }} }})" >> $GITHUB_ENV
+          case "${{ matrix.kernel }}" in
+            1) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
+               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
+            2) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_2 }}" >> $GITHUB_ENV
+               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
+            3) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_3 }}" >> $GITHUB_ENV
+               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
+          esac
 
       - name: Checkout Kernel
-        run: |
-          git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
+        run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
       - name: Apply Patches
         run: |

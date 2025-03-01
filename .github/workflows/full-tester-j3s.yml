@@ -167,8 +167,8 @@ jobs:
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
-          name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
-          path: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
+          name: anykernel-flashable-zip
+          path: AnyKernel3/FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
 
   release:
     needs: package_anykernel
@@ -178,7 +178,7 @@ jobs:
       - name: Download AnyKernel Package
         uses: actions/download-artifact@v4
         with:
-          name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
+          name: anykernel-flashable-zip
           path: .
 
       - name: Upload to Release

@@ -182,6 +182,6 @@ jobs:
         with:
           name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
           path: |
-            ../AnyKernel3/
-            !../AnyKernel3/.git
-            !..AnyKernel3/.github
+            AnyKernel3/
+            !AnyKernel3/.git
+            !AnyKernel3/.github

@@ -66,6 +66,15 @@ jobs:
           cp out/arch/arm64/boot/dtb.img ../alioth-normal-dtb || true
           cp out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo.img || true
 
+      - name: Upload Original Kernel Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-build
+          path: |
+            Image-original.gz
+            alioth-normal-dtb
+            alioth-aosp-dtbo.img
+
   build_modified:
     runs-on: ubuntu-latest
     steps:
@@ -109,6 +118,15 @@ jobs:
           cp out/arch/arm64/boot/Image.gz ../Image-modified.gz
           cp out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb-2 || true
           cp out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo-2.img || true
+
+      - name: Upload Modified Kernel Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: modified-build
+          path: |
+            Image-modified.gz
+            alioth-effcpu-dtb-2
+            alioth-miui-dtbo-2.img
 
   package_anykernel:
     needs: [build_original, build_modified]

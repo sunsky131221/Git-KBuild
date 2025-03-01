@@ -74,7 +74,8 @@ jobs:
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
-      - name: Apply Patches
+      - name: Apply Patches (Skip for Kernel 3)
+        if: matrix.kernel != 3
         run: |
           cd kernel_tree
           bash nextpatch.sh

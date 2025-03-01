@@ -181,4 +181,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
-          path: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
+          path: |
+            $../AnyKernel3/
+            !../AnyKernel3/.git
+            !..AnyKernel3/.github

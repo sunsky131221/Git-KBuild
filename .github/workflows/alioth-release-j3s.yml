@@ -1,4 +1,4 @@
-name: FD-stk - clang-r547379 release full build
+name: FD-j3s - clang-r547379 release full build
 
 on:
   pull_request:

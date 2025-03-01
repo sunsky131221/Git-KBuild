@@ -132,11 +132,11 @@ jobs:
       - name: Add Kernel Images to AnyKernel3
         run: |
           cp Image-original.gz AnyKernel3/Image-original.gz
-          cp dtb-original.img AnyKernel3/dtb-original.img || true
-          cp dtbo-original.img AnyKernel3/dtbo-original.img || true
+          cp alioth-normal-dtb AnyKernel3/alioth-normal-dtb || true
+          cp alioth-aosp-dtbo.img AnyKernel3/alioth-aosp-dtbo.img || true
           cp Image-modified.gz AnyKernel3/Image-modified.gz
-          cp dtb-modified.img AnyKernel3/dtb-modified.img || true
-          cp dtbo-modified.img AnyKernel3/dtbo-modified.img || true
+          cp alioth-effcpu-dtb-2 AnyKernel3/alioth-effcpu-dtb-2 || true
+          cp alioth-miui-dtbo-2.img AnyKernel3/alioth-miui-dtbo-2.img || true
           cd AnyKernel3
           zip -q -r FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
           zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *

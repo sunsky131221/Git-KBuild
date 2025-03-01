@@ -63,8 +63,8 @@ jobs:
           make O=out vendor/alioth_defconfig
           make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
           cp out/arch/arm64/boot/Image.gz ../Image-original.gz
-          cp out/arch/arm64/boot/dtb.img ../alioth-normal-dtb || true
-          cp out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo.img || true
+          cp out/arch/arm64/boot/dtb.img ../dtb-original.img || true
+          cp out/arch/arm64/boot/dtbo.img ../dtbo-original.img || true
 
       - name: Upload Original Kernel Artifacts
         uses: actions/upload-artifact@v4
@@ -72,8 +72,8 @@ jobs:
           name: original-build
           path: |
             Image-original.gz
-            alioth-normal-dtb
-            alioth-aosp-dtbo.img
+            dtb-original.img
+            dtbo-original.img
 
   build_modified:
     runs-on: ubuntu-latest
@@ -116,8 +116,8 @@ jobs:
           make O=out vendor/alioth_defconfig
           make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
           cp out/arch/arm64/boot/Image.gz ../Image-modified.gz
-          cp out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb-2 || true
-          cp out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo-2.img || true
+          cp out/arch/arm64/boot/dtb.img ../dtb-modified.img || true
+          cp out/arch/arm64/boot/dtbo.img ../dtbo-modified.img || true
 
       - name: Upload Modified Kernel Artifacts
         uses: actions/upload-artifact@v4
@@ -125,8 +125,8 @@ jobs:
           name: modified-build
           path: |
             Image-modified.gz
-            alioth-effcpu-dtb-2
-            alioth-miui-dtbo-2.img
+            dtb-modified.img
+            dtbo-modified.img
 
   package_anykernel:
     needs: [build_original, build_modified]
@@ -149,12 +149,18 @@ jobs:
 
       - name: Add Kernel Images to AnyKernel3
         run: |
-          cp Image-original.gz AnyKernel3/Image-original.gz
-          cp alioth-normal-dtb AnyKernel3/alioth-normal-dtb || true
-          cp alioth-aosp-dtbo.img AnyKernel3/alioth-aosp-dtbo.img || true
+          cp Image-original.gz AnyKernel3/Image.gz
+          if [ -e "dtb-original.img" ]; then
+          mv -f dtb-original.img dtb1
+          cp -f dtb1 AnyKernel3/alioth-normal-dtb
+          fi
+          if [ -e "dtb-modified.img" ]; then
+          mv -f dtb-modified.img dtb2
+          cp -f dtb2 AnyKernel3/alioth-effcpu-dtb2
+          fi
+          cp dtbo-original.img AnyKernel3/dtbo.img || true
           cp Image-modified.gz AnyKernel3/Image-modified.gz
-          cp alioth-effcpu-dtb-2 AnyKernel3/alioth-effcpu-dtb-2 || true
-          cp alioth-miui-dtbo-2.img AnyKernel3/alioth-miui-dtbo-2.img || true
+          cp dtbo-modified.img AnyKernel3/dtbo-modified.img || true
           cd AnyKernel3
           zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
 

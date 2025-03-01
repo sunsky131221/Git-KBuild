@@ -172,32 +172,13 @@ jobs:
           fi
           cp dtbo-original.img AnyKernel3/alioth-aosp-dtbo.img || true
           cp dtbo-modified.img AnyKernel3/alioth-miui-dtbo.img || true
+          name=FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
           cd AnyKernel3
-          zip -r9 ../FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip *
+          zip -q -r $name *
+          mv $name ../
 
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
-          name: anykernel-flashable-zip
+          name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
           path: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
-
-  release:
-    needs: package_anykernel
-    if: ${{ github.event.inputs.UPLOAD_TO_RELEASE == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download AnyKernel Package
-        uses: actions/download-artifact@v4
-        with:
-          name: anykernel-flashable-zip
-          path: .
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
-          name: ${{ github.event.inputs.CODENAME }}-${{ github.run_id }}-MAGIC
-          tag_name: ${{ github.run_id }}
-          body: |
-            **${{ github.event.inputs.BUILD_TITLE || github.event.inputs.CODENAME }}**
-            Kernel successfully built! 🎉

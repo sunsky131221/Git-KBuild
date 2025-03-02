@@ -149,11 +149,6 @@ jobs:
           mv kernel-${{ matrix.kernel }}-original/* AnyKernel3-${{ matrix.kernel }}/
           mv kernel-${{ matrix.kernel }}-modified/* AnyKernel3-${{ matrix.kernel }}/
 
-      - name: Create Flashable Kernel Package
-        run: |
-          cd AnyKernel3-${{ matrix.kernel }}
-          zip -r FakeDreamer-j3s-${{ matrix.kernel }}-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip .
-
       - name: Define ZIP Name
         run: |
           if [[ "${{ matrix.kernel }}" == "1" ]]; then

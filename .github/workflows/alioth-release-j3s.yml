@@ -115,11 +115,11 @@ jobs:
         with:
           name: kernel-${{ matrix.kernel }}-${{ matrix.type }}
           path: |
-            alioth-aosp-dtbo.img
-            alioth-miui-dtbo.img
-            alioth-normal-dtb
-            alioth-effcpu-dtb
-            Image.gz
+            alioth-aosp-dtbo-${{ matrix.kernel }}.img
+            alioth-miui-dtbo-${{ matrix.kernel }}.img
+            alioth-normal-dtb-${{ matrix.kernel }}
+            alioth-effcpu-dtb-${{ matrix.kernel }}
+            Image-${{ matrix.kernel }}.gz
 
   package_anykernel:
     needs: build

@@ -1,4 +1,4 @@
-name: FD-j3s - Clang-r547379 release full build (3 Kernel Trees)
+name: FD-alioth-release-j3s-clang-r547379
 
 on:
   pull_request:

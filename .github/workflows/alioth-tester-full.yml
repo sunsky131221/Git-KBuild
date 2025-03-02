@@ -1,4 +1,4 @@
-name: FD-j3s-stk - Clang-r547379 tester full build (3 Kernel Trees)
+name: FD-alioth-test-full-clang-r547379
 
 on:
   pull_request:

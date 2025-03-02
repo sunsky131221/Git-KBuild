@@ -1,4 +1,4 @@
-name: FD-j3s - neutron tester debug
+name: FD-alioth-debug-j3s-neutron
 
 on:
   pull_request:

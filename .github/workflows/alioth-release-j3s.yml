@@ -104,7 +104,7 @@ jobs:
           if [[ "${{ matrix.type }}" == "original" ]]; then
             mv out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo.img
             mv out/arch/arm64/boot/dtb.img ../alioth-normal-dtb
-            cp out/arch/arm64/boot/Image.gz ../Image-${{ matrix.kernel }}.gz
+            cp out/arch/arm64/boot/Image.gz ../Image.gz
           else
             mv out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo.img
             mv out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb
@@ -112,33 +112,56 @@ jobs:
       - name: Upload Kernel Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-${{ matrix.kernel }}-${{ matrix.type }}
+          name: kernel-${{ matrix.kernel }}
           path: |
             alioth-aosp-dtbo.img
             alioth-miui-dtbo.img
             alioth-normal-dtb
             alioth-effcpu-dtb
-            Image-${{ matrix.kernel }}.gz
+            Image.gz
+
   package_anykernel:
     needs: build
+    strategy:
+      matrix:
+        kernel: [1, 2, 3]
     runs-on: ubuntu-latest
+
     steps:
-      - name: Download Kernel Builds
+      - name: Download Kernel Build
         uses: actions/download-artifact@v4
+        with:
+          name: kernel-${{ matrix.kernel }}
+          path: kernel-${{ matrix.kernel }}
 
       - name: Clone AnyKernel3
-        run: git clone --recursive --depth=1 ${{ github.event.inputs.ANYKERNEL_URL }} -b ${{ github.event.inputs.CODENAME }} AnyKernel3
+        run: git clone --recursive --depth=1 ${{ github.event.inputs.ANYKERNEL_URL }} -b main AnyKernel3-${{ matrix.kernel }}
 
-      - name: Create Flashable Kernel Packages
+      - name: Move Kernel Files to AnyKernel3
         run: |
-          zip -r FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip AnyKernel3
-          zip -r FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip AnyKernel3
-          zip -r FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip AnyKernel3
-      - name: Upload AnyKernel3 Packages
+          mv kernel-${{ matrix.kernel }}/* AnyKernel3-${{ matrix.kernel }}/
+
+      - name: Create Flashable Kernel Package
+        run: |
+          cd AnyKernel3-${{ matrix.kernel }}
+          zip -r FakeDreamer-j3s-${{ matrix.kernel }}-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip .
+
+      - name: Define ZIP Name
+        run: |
+          if [[ "${{ matrix.kernel }}" == "1" ]]; then
+            echo "ZIP_NAME=FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+          elif [[ "${{ matrix.kernel }}" == "2" ]]; then
+            echo "ZIP_NAME=FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+          else
+            echo "ZIP_NAME=FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+          fi
+      
+      - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
-          name: FakeDreamer-Packages
+          name: ${{ env.ZIP_NAME }}
           path: |
-            FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
-            FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
-            FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
+            AnyKernel3-${{ matrix.kernel }}/
+            !AnyKernel3-${{ matrix.kernel }}/.git
+            !AnyKernel3-${{ matrix.kernel }}/.github
+      

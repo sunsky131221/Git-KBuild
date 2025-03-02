@@ -151,12 +151,13 @@ jobs:
 
       - name: Define ZIP Name
         run: |
+          COMPILED_DATE=$(date +%Y%m%d)
           if [[ "${{ matrix.kernel }}" == "1" ]]; then
-            echo "ZIP_NAME=FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+            echo "ZIP_NAME=FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
           elif [[ "${{ matrix.kernel }}" == "2" ]]; then
-            echo "ZIP_NAME=FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+            echo "ZIP_NAME=FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
           else
-            echo "ZIP_NAME=FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}" >> $GITHUB_ENV
+            echo "ZIP_NAME=FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
           fi
       
       - name: Upload Flashable Kernel Zip

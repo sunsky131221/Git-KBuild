@@ -102,12 +102,12 @@ jobs:
           make O=out vendor/alioth_defconfig
           make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
           if [[ "${{ matrix.type }}" == "original" ]]; then
-            mv out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo.img
-            mv out/arch/arm64/boot/dtb.img ../alioth-normal-dtb
-            cp out/arch/arm64/boot/Image.gz ../Image.gz
+            mv out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo-${{ matrix.kernel }}.img
+            mv out/arch/arm64/boot/dtb.img ../alioth-normal-dtb-${{ matrix.kernel }}
+            cp out/arch/arm64/boot/Image.gz ../Image-${{ matrix.kernel }}.gz
           else
-            mv out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo.img
-            mv out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb
+            mv out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo-${{ matrix.kernel }}.img
+            mv out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb-${{ matrix.kernel }}
           fi
 
       - name: Upload Kernel Artifacts

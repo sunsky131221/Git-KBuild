@@ -15,17 +15,9 @@ on:
         description: 'Kernel Tree Branch 1'
         default: 'next-main'
         required: true
-      KERNEL_TREE_2:
-        description: 'Kernel Tree 2'
-        default: 'https://github.com/re-noroi/kernel_sm8250'
-        required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
         default: 'next-susfs'
-        required: true
-      KERNEL_TREE_3:
-        description: 'Kernel Tree 3'
-        default: 'https://github.com/re-noroi/kernel_sm8250'
         required: true
       KERNEL_TREE_BRANCH_3:
         description: 'Kernel Tree Branch 3'
@@ -38,6 +30,10 @@ on:
       ANYKERNEL_URL:
         description: 'AnyKernel Url (leave blank if you dont want AnyKernel)'
         default: 'https://github.com/re-noroi/anykernel3-test'
+        required: false
+      CUSTOM_SED:
+        description: 'Custom Kernel Version'
+        default: '-FakeDreamer'
         required: false
 
 jobs:
@@ -62,22 +58,29 @@ jobs:
           
       - name: Set Kernel Environment Variables
         run: |
+          echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
           case "${{ matrix.kernel }}" in
-            1) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
-               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
-            2) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_2 }}" >> $GITHUB_ENV
-               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
-            3) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_3 }}" >> $GITHUB_ENV
-               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
+            1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
+            2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
+            3) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
           esac
+          
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
+      - name: Kernel Version
+        run: |
+          cd kernel_tree
+          if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
+            sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/alioth_defconfig
+          fi
+      
       - name: Apply Patches (Skip for Kernel 3)
         if: matrix.kernel != 3
         run: |
           cd kernel_tree
           bash nextpatch.sh
+          
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'
         run: |

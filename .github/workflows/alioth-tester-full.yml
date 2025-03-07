@@ -15,10 +15,6 @@ on:
         description: 'Kernel Tree Branch 1'
         default: 'tester'
         required: true
-      KERNEL_TREE_2:
-        description: 'Kernel Tree 2'
-        default: 'https://github.com/re-noroi/kernel_sm8250'
-        required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
         default: 'tester-j3sbattery'
@@ -32,11 +28,9 @@ on:
         default: 'https://github.com/re-noroi/anykernel3-test'
         required: false
       CUSTOM_SED:
-        description: 'version edit'
-        default: |
-          sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="-FakeDreamer"/' arch/arm64/configs/vendor/alioth_defconfig
+        description: 'Custom Kernel Version'
+        default: '-FakeDreamer'
         required: false
-
 
 jobs:
   build:
@@ -60,22 +54,20 @@ jobs:
           
       - name: Set Kernel Environment Variables
         run: |
+          echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
           case "${{ matrix.kernel }}" in
-            1) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
-               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
-            2) echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_2 }}" >> $GITHUB_ENV
-               echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
+            1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
+            2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
           esac
+          
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
       - name: Kernel Version
-        if: matrix.kernel
         run: |
           cd kernel_tree
-          CUSTOM_SED="${{ github.event.inputs.CUSTOM_SED }}"
-          if [[ -n "$CUSTOM_SED" ]]; then
-            eval "$CUSTOM_SED"
+          if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
+            sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/alioth_defconfig
           fi
       
       - name: Apply Patches
@@ -83,6 +75,7 @@ jobs:
         run: |
           cd kernel_tree
           bash nextpatch.sh
+          
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'
         run: |

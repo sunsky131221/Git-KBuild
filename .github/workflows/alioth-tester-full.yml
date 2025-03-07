@@ -34,7 +34,7 @@ on:
       CUSTOM_SED:
         description: 'version edit'
         default: |
-          sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="-FakeDreamer"/' kernel_tree/arch/arm64/configs/vendor/alioth_defconfig
+          sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="-FakeDreamer"/' arch/arm64/configs/vendor/alioth_defconfig
         required: false
 
 

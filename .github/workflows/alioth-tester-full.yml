@@ -31,6 +31,12 @@ on:
         description: 'AnyKernel Url (leave blank if you dont want AnyKernel)'
         default: 'https://github.com/re-noroi/anykernel3-test'
         required: false
+      CUSTOM_SED:
+        description: 'version edit'
+        default: |
+          sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="-FakeDreamer"/' kernel_tree/arch/arm64/configs/vendor/alioth_defconfig
+        required: false
+
 
 jobs:
   build:
@@ -63,6 +69,14 @@ jobs:
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
+      - name: Kernel Version
+        if: matrix.kernel
+        run: |
+          CUSTOM_SED="${{ github.event.inputs.CUSTOM_SED }}"
+          if [[ -n "$CUSTOM_SED" ]]; then
+            eval "$CUSTOM_SED"
+          fi
+      
       - name: Apply Patches
         if: matrix.kernel
         run: |

@@ -72,6 +72,7 @@ jobs:
       - name: Kernel Version
         if: matrix.kernel
         run: |
+          cd kernel_tree
           CUSTOM_SED="${{ github.event.inputs.CUSTOM_SED }}"
           if [[ -n "$CUSTOM_SED" ]]; then
             eval "$CUSTOM_SED"

@@ -67,7 +67,7 @@ jobs:
         if: matrix.kernel == 1
         run: |
           cd kernel_tree
-          sed -i -e '/qcom,j3s-batt-profile;,/c\//qcom,j3s-batt-profile;,' arch/arm64/boot/dts/vendor/qcom/alioth-sm8250.dtsi
+          sed -i -e '/qcom,j3s-batt-profile;/d' arch/arm64/boot/dts/vendor/qcom/alioth-sm8250.dtsi
       
       - name: Kernel Version
         run: |

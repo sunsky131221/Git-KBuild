@@ -13,11 +13,11 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'tester-j3s-rebase'
+        default: 'whiteroses'
         required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
-        default: 'tester-j3s-rebase'
+        default: 'whiteroses'
         required: true
       CODENAME:
         description: 'Phone Codename'

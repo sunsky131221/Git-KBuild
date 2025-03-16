@@ -13,15 +13,15 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'next-main-j3sbattery'
+        default: 'next-main'
         required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
-        default: 'next-susfs-j3sbattery'
+        default: 'next-susfs'
         required: true
       KERNEL_TREE_BRANCH_3:
         description: 'Kernel Tree Branch 3'
-        default: 'no-ksu-j3sbattery'
+        default: 'no-ksu'
         required: true
       CODENAME:
         description: 'Phone Codename'

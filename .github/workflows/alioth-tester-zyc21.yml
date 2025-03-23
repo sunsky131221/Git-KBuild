@@ -1,4 +1,4 @@
-name: FD-alioth-release-j3s-zyc21
+name: FD-alioth-test-rebase-zyc21
 
 on:
   pull_request:
@@ -13,15 +13,11 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'next-main'
+        default: 'whiteroses'
         required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
-        default: 'next-susfs'
-        required: true
-      KERNEL_TREE_BRANCH_3:
-        description: 'Kernel Tree Branch 3'
-        default: 'no-ksu'
+        default: 'whiteroses'
         required: true
       CODENAME:
         description: 'Phone Codename'
@@ -40,7 +36,7 @@ jobs:
   build:
     strategy:
       matrix:
-        kernel: [1, 2, 3]
+        kernel: [1, 2]
         type: [original, modified]
     runs-on: ubuntu-latest
     env:
@@ -62,12 +58,17 @@ jobs:
           case "${{ matrix.kernel }}" in
             1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
             2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
-            3) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
           esac
-         
+          
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
+      - name: Change different battery type
+        if: matrix.kernel == 1
+        run: |
+          cd kernel_tree
+          sed -i -e '/qcom,j3s-batt-profile;/d' arch/arm64/boot/dts/vendor/qcom/alioth-sm8250.dtsi
+      
       - name: Kernel Version
         run: |
           cd kernel_tree
@@ -75,11 +76,12 @@ jobs:
             sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/alioth_defconfig
           fi
       
-      - name: Apply Patches (Skip for Kernel 3)
-        if: matrix.kernel != 3
+      - name: Apply Patches
+        if: matrix.kernel
         run: |
           cd kernel_tree
           bash nextpatch.sh
+          
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'
         run: |
@@ -126,7 +128,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        kernel: [1, 2, 3]
+        kernel: [1, 2]
     runs-on: ubuntu-latest
 
     steps:
@@ -154,11 +156,9 @@ jobs:
         run: |
           COMPILED_DATE=$(date +%Y%m%d)
           if [[ "${{ matrix.kernel }}" == "1" ]]; then
-            echo "ZIP_NAME=FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
-          elif [[ "${{ matrix.kernel }}" == "2" ]]; then
-            echo "ZIP_NAME=FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+            echo "ZIP_NAME=FakeDreamer-stk-test-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
           else
-            echo "ZIP_NAME=FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+            echo "ZIP_NAME=FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
           fi
       
       - name: Upload Flashable Kernel Zip

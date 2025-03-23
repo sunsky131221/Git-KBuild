@@ -1,4 +1,4 @@
-name: FD-alioth-debug-j3s-zyc21
+name: FD-alioth-release-j3s-zyc21
 
 on:
   pull_request:
@@ -7,14 +7,22 @@ on:
       BUILD_TITLE:
         description: 'Custom Build Title'
         required: false
-      KERNEL_TREE:
-        description: 'Kernel Tree'
+      KERNEL_TREE_1:
+        description: 'Kernel Tree 1'
         default: 'https://github.com/re-noroi/kernel_sm8250'
         required: true
-      KERNEL_TREE_BRANCH:
-        description: 'Kernel Tree Branch'
+      KERNEL_TREE_BRANCH_1:
+        description: 'Kernel Tree Branch 1'
+        default: 'next-main'
         required: true
-        default: 'whiteroses'
+      KERNEL_TREE_BRANCH_2:
+        description: 'Kernel Tree Branch 2'
+        default: 'next-susfs'
+        required: true
+      KERNEL_TREE_BRANCH_3:
+        description: 'Kernel Tree Branch 3'
+        default: 'no-ksu'
+        required: true
       CODENAME:
         description: 'Phone Codename'
         default: 'alioth'
@@ -23,81 +31,57 @@ on:
         description: 'AnyKernel Url (leave blank if you dont want AnyKernel)'
         default: 'https://github.com/re-noroi/anykernel3-test'
         required: false
-      ANYKERNEL_BRANCH:
-        description: 'AnyKernel Branch (defaults to codename)'
-        default: 'main'
+      CUSTOM_SED:
+        description: 'Custom Kernel Version'
+        default: '-FakeDreamer'
         required: false
-      UPLOAD_TO_RELEASE:
-        description: 'Upload to release'
-        type: boolean
-        default: false
 
 jobs:
-  build_original:
+  build:
+    strategy:
+      matrix:
+        kernel: [1, 2, 3]
+        type: [original, modified]
     runs-on: ubuntu-latest
+    env:
+      UPLOAD_TO_RELEASE: false
+
     steps:
       - name: Install Dependencies
         run: sudo apt install flex libncurses6
 
       - name: Download & Extract Clang
         run: |
-          wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/10032024/neutron-clang-10032024.tar.zst -O clang.tar.zst
-          mkdir clang
-          unzstd -d clang.tar.zst
-          tar -xf clang.tar -C clang
-
-      - name: Checkout Kernel
-        run: git clone --depth=1 ${{ github.event.inputs.KERNEL_TREE }} -b ${{ github.event.inputs.KERNEL_TREE_BRANCH }} kernel_tree
-
-      - name: Apply Patches
-        run: |
-          cd kernel_tree
-          bash nextpatch.sh
-
-      - name: Build Kernel - Original
-        run: |
-          export PATH="$(pwd)/clang/bin:$PATH"
-          export ARCH=arm64
-          export SUBARCH=ARM64
-          export KBUILD_BUILD_USER="renoroi"
-          export KBUILD_BUILD_HOST="dreamstate"
-          cd kernel_tree
-          make O=out vendor/alioth_defconfig
-          make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
-          cp out/arch/arm64/boot/Image.gz ../Image-original.gz
-          cp out/arch/arm64/boot/dtb.img ../dtb-original.img || true
-          cp out/arch/arm64/boot/dtbo.img ../dtbo-original.img || true
-
-      - name: Upload Original Kernel Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: original-build
-          path: |
-            Image-original.gz
-            dtb-original.img
-            dtbo-original.img
-
-  build_modified:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Dependencies
-        run: sudo apt install flex libncurses6
-
-      - name: Download & Extract Clang
-        run: |
-          wget https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250323-release/Clang-21.0.0git-20250323.tar.gz
+          wget https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250322-release/Clang-21.0.0git-20250322.tar.gz -O clang.tar.gz
           mkdir clang
           tar -xzvf clang.tar.gz -C clang
-
+          
+      - name: Set Kernel Environment Variables
+        run: |
+          echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
+          case "${{ matrix.kernel }}" in
+            1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
+            2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
+            3) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
+          esac
+         
       - name: Checkout Kernel
-        run: git clone --depth=1 ${{ github.event.inputs.KERNEL_TREE }} -b ${{ github.event.inputs.KERNEL_TREE_BRANCH }} kernel_tree
+        run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
 
-      - name: Apply Patches
+      - name: Kernel Version
+        run: |
+          cd kernel_tree
+          if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
+            sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/alioth_defconfig
+          fi
+      
+      - name: Apply Patches (Skip for Kernel 3)
+        if: matrix.kernel != 3
         run: |
           cd kernel_tree
           bash nextpatch.sh
-
-      - name: Apply Modifications
+      - name: Apply Modifications (if modified build)
+        if: matrix.type == 'modified'
         run: |
           cd kernel_tree
           sed -i -e '/<2553600>,/c\<2553600>;' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
@@ -107,8 +91,8 @@ jobs:
           sed -i -e '/<3187200>;/c\//<3187200>;' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
           sed -i -e 's/qcom,mdss-pan-physical-width-dimension = <70>;/qcom,mdss-pan-physical-width-dimension = <700>;/' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
           sed -i -e 's/qcom,mdss-pan-physical-height-dimension = <155>;/qcom,mdss-pan-physical-height-dimension = <1540>;/' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-
-      - name: Build Kernel - Modified
+      
+      - name: Build Kernel
         run: |
           export PATH="$(pwd)/clang/bin:$PATH"
           export ARCH=arm64
@@ -118,61 +102,71 @@ jobs:
           cd kernel_tree
           make O=out vendor/alioth_defconfig
           make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
-          cp out/arch/arm64/boot/Image.gz ../Image-modified.gz
-          cp out/arch/arm64/boot/dtb.img ../dtb-modified.img || true
-          cp out/arch/arm64/boot/dtbo.img ../dtbo-modified.img || true
+          if [[ "${{ matrix.type }}" == "original" ]]; then
+            mv out/arch/arm64/boot/dtbo.img ../alioth-aosp-dtbo.img
+            mv out/arch/arm64/boot/dtb.img ../alioth-normal-dtb
+            cp out/arch/arm64/boot/Image.gz ../Image.gz
+          else
+            mv out/arch/arm64/boot/dtbo.img ../alioth-miui-dtbo.img
+            mv out/arch/arm64/boot/dtb.img ../alioth-effcpu-dtb
+          fi
 
-      - name: Upload Modified Kernel Artifacts
+      - name: Upload Kernel Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: modified-build
+          name: kernel-${{ matrix.kernel }}-${{ matrix.type }}
           path: |
-            Image-modified.gz
-            dtb-modified.img
-            dtbo-modified.img
+            alioth-aosp-dtbo.img
+            alioth-miui-dtbo.img
+            alioth-normal-dtb
+            alioth-effcpu-dtb
+            Image.gz
 
   package_anykernel:
-    needs: [build_original, build_modified]
+    needs: build
+    strategy:
+      matrix:
+        kernel: [1, 2, 3]
     runs-on: ubuntu-latest
-    steps:
-      - name: Download Original Kernel
-        uses: actions/download-artifact@v4
-        with:
-          name: original-build
-          path: .
 
-      - name: Download Modified Kernel
+    steps:
+      - name: Download Kernel Build Original
         uses: actions/download-artifact@v4
         with:
-          name: modified-build
-          path: .
+          name: kernel-${{ matrix.kernel }}-original
+          path: kernel-${{ matrix.kernel }}-original
+
+      - name: Download Kernel Build Modified
+        uses: actions/download-artifact@v4
+        with:
+          name: kernel-${{ matrix.kernel }}-modified
+          path: kernel-${{ matrix.kernel }}-modified
 
       - name: Clone AnyKernel3
-        run: git clone --recursive --depth=1 ${{ github.event.inputs.ANYKERNEL_URL }} -b ${{ github.event.inputs.ANYKERNEL_BRANCH || github.event.inputs.CODENAME }} AnyKernel3
+        run: git clone --recursive --depth=1 ${{ github.event.inputs.ANYKERNEL_URL }} -b main AnyKernel3-${{ matrix.kernel }}
 
-      - name: Add Kernel Images to AnyKernel3
+      - name: Move Kernel Files to AnyKernel3
         run: |
-          cp Image-original.gz AnyKernel3/Image.gz
-          if [ -e "dtb-original.img" ]; then
-          mv -f dtb-original.img dtb1
-          cp -f dtb1 AnyKernel3/alioth-normal-dtb
-          fi
-          if [ -e "dtb-modified.img" ]; then
-          mv -f dtb-modified.img dtb2
-          cp -f dtb2 AnyKernel3/alioth-effcpu-dtb
-          fi
-          cp dtbo-original.img AnyKernel3/alioth-aosp-dtbo.img || true
-          cp dtbo-modified.img AnyKernel3/alioth-miui-dtbo.img || true
-          name=FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
-          cd AnyKernel3
-          zip -q -r $name *
-          mv $name ../
+          mv kernel-${{ matrix.kernel }}-original/* AnyKernel3-${{ matrix.kernel }}/
+          mv kernel-${{ matrix.kernel }}-modified/* AnyKernel3-${{ matrix.kernel }}/
 
+      - name: Define ZIP Name
+        run: |
+          COMPILED_DATE=$(date +%Y%m%d)
+          if [[ "${{ matrix.kernel }}" == "1" ]]; then
+            echo "ZIP_NAME=FakeDreamer-j3s-next-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+          elif [[ "${{ matrix.kernel }}" == "2" ]]; then
+            echo "ZIP_NAME=FakeDreamer-j3s-susfs-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+          else
+            echo "ZIP_NAME=FakeDreamer-j3s-noksu-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+          fi
+      
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
-          name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
+          name: ${{ env.ZIP_NAME }}
           path: |
-            AnyKernel3/
-            !AnyKernel3/.git
-            !AnyKernel3/.github
+            AnyKernel3-${{ matrix.kernel }}/
+            !AnyKernel3-${{ matrix.kernel }}/.git
+            !AnyKernel3-${{ matrix.kernel }}/.github
+      

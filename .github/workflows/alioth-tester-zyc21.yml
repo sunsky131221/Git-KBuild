@@ -81,6 +81,13 @@ jobs:
         run: |
           cd kernel_tree
           bash nextpatch.sh
+
+      - name: zyc opt
+        if: matrix.kernel
+        run: |
+          cd kernel_tree
+          sed -i -e 'KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release' Makefile
+          sed -i -e 'KBUILD_LDFLAGS  += -mllvm -regalloc-enable-advisor=release' Makefile
           
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'

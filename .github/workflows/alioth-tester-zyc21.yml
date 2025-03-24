@@ -88,6 +88,10 @@ jobs:
           cd kernel_tree
           sed -i -e '/KBUILD_CFLAGS   += -mllvm -regalloc-enable-advisor=release/d' Makefile
           sed -i -e '/KBUILD_LDFLAGS  += -mllvm -regalloc-enable-advisor=release/d' Makefile
+          sed -i -e '/KBUILD_LDFLAGS  += -mllvm -enable-ml-inliner=release/d' Makefile
+          sed -i -e '/KBUILD_CFLAGS 	+= -mllvm -inline-threshold=500/d' Makefile
+          sed -i -e '/KBUILD_CFLAGS 	+= -mllvm -unroll-threshold=500/d' Makefile
+          sed -i -e '/KBUILD_CFLAGS 	+= -mllvm -enable-machine-outliner/d' Makefile
           
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'

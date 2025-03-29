@@ -13,11 +13,11 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'whiteroses'
+        default: 'freesia'
         required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
-        default: 'whiteroses'
+        default: 'freesia'
         required: true
       CODENAME:
         description: 'Phone Codename'
@@ -48,7 +48,7 @@ jobs:
 
       - name: Download & Extract Clang
         run: |
-          wget https://github.com/ZyCromerZ/Clang/releases/download/21.0.0git-20250322-release/Clang-21.0.0git-20250322.tar.gz -O clang.tar.gz
+          wget https://github.com/greenforce-project/greenforce_clang/releases/download/23032025/greenforce-clang-21.0.0git-23032025.tar.gz -O clang.tar.gz
           mkdir clang
           tar -xzvf clang.tar.gz -C clang
           

@@ -172,7 +172,7 @@ jobs:
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
-          name: FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
+          name: FakeDreamer-j3s-debug-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}
           path: |
             AnyKernel3/
             !AnyKernel3/.git

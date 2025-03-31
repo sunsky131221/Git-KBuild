@@ -164,7 +164,7 @@ jobs:
           fi
           cp dtbo-original.img AnyKernel3/alioth-aosp-dtbo.img || true
           cp dtbo-modified.img AnyKernel3/alioth-miui-dtbo.img || true
-          name=FakeDreamer-j3s-test-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
+          name=FakeDreamer-j3s-debug-${{ github.event.inputs.CODENAME }}-${{ github.run_id }}.zip
           cd AnyKernel3
           zip -q -r $name *
           mv $name ../

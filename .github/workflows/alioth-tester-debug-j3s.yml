@@ -169,8 +169,11 @@ jobs:
           zip -q -r $name *
           mv $name ../
 
-      - name: Remove .gitkeep files
-        run: find AnyKernel3/ -name ".gitkeep" -delete
+      - name: Create necessary empty folders
+        run: |
+          mkdir -p AnyKernel3/ramdisk
+          mkdir -p AnyKernel3/patch
+          mkdir -p AnyKernel3/modules/system/lib/modules
 
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4

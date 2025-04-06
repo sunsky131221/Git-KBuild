@@ -177,3 +177,4 @@ jobs:
             AnyKernel3/
             !AnyKernel3/.git
             !AnyKernel3/.github
+            !AnyKernel3-${{ matrix.kernel }}/**/.gitkeep

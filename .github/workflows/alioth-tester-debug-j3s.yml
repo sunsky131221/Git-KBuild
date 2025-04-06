@@ -169,6 +169,9 @@ jobs:
           zip -q -r $name *
           mv $name ../
 
+      - name: Remove .gitkeep files
+        run: find AnyKernel3/ -name ".gitkeep" -delete
+
       - name: Upload Flashable Kernel Zip
         uses: actions/upload-artifact@v4
         with:
@@ -177,4 +180,3 @@ jobs:
             AnyKernel3/
             !AnyKernel3/.git
             !AnyKernel3/.github
-            !AnyKernel3/**/.gitkeep

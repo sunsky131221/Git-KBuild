@@ -1,0 +1,149 @@
+name: FD-apollo-test-rebase-clang-r547379
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      BUILD_TITLE:
+        description: 'Custom Build Title'
+        required: false
+      KERNEL_TREE_1:
+        description: 'Kernel Tree 1'
+        default: 'https://github.com/re-noroi/kernel_sm8250'
+        required: true
+      KERNEL_TREE_BRANCH_1:
+        description: 'Kernel Tree Branch 1'
+        default: 'freesia'
+        required: true
+      CODENAME:
+        description: 'Phone Codename'
+        default: 'apollo'
+        required: true
+      ANYKERNEL_URL:
+        description: 'AnyKernel Url (leave blank if you dont want AnyKernel)'
+        default: 'https://github.com/re-noroi/anykernel3-test'
+        required: false
+      CUSTOM_SED:
+        description: 'Custom Kernel Version'
+        default: '-FakeDreamer'
+        required: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        type: [original, modified]
+    runs-on: ubuntu-latest
+    env:
+      UPLOAD_TO_RELEASE: false
+
+    steps:
+      - name: Install Dependencies
+        run: sudo apt install flex libncurses6
+
+      - name: Download & Extract Clang
+        run: |
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz -O clang.tar.gz
+          mkdir clang
+          tar -xf clang.tar.gz -C clang
+
+      - name: Set Kernel Environment Variables
+        run: |
+          echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
+          echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV
+
+      - name: Checkout Kernel
+        run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
+
+      - name: Kernel Version
+        run: |
+          cd kernel_tree
+          if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
+            sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/apollo_defconfig
+          fi
+
+      - name: Apply Patches
+        run: |
+          cd kernel_tree
+          bash nextpatch.sh
+
+      - name: Apply Modifications (if modified build)
+        if: matrix.type == 'modified'
+        run: |
+          cd kernel_tree
+          sed -i -e '/<2553600>,/c\<2553600>;' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
+          sed -i -e '/<2649600>,/c\//<2649600>,' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
+          sed -i -e '/<2745600>,/c\//<2745600>,' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
+          sed -i -e '/<2841600>,/c\//<2841600>,' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
+          sed -i -e '/<3187200>;/c\//<3187200>;' arch/arm64/boot/dts/vendor/qcom/kona.dtsi
+          sed -i -e 's/qcom,mdss-pan-physical-width-dimension = <70>;/qcom,mdss-pan-physical-width-dimension = <700>;/' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+          sed -i -e 's/qcom,mdss-pan-physical-height-dimension = <155>;/qcom,mdss-pan-physical-height-dimension = <1540>;/' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+
+      - name: Build Kernel
+        run: |
+          export PATH="$(pwd)/clang/bin:$PATH"
+          export ARCH=arm64
+          export SUBARCH=ARM64
+          export KBUILD_BUILD_USER="renoroi"
+          export KBUILD_BUILD_HOST="dreamstate"
+          cd kernel_tree
+          make O=out vendor/apollo_defconfig
+          make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
+          if [[ "${{ matrix.type }}" == "original" ]]; then
+            mv out/arch/arm64/boot/dtbo.img ../apollo-aosp-dtbo.img
+            mv out/arch/arm64/boot/dtb.img ../apollo-normal-dtb
+            cp out/arch/arm64/boot/Image.gz ../Image.gz
+          else
+            mv out/arch/arm64/boot/dtbo.img ../apollo-miui-dtbo.img
+            mv out/arch/arm64/boot/dtb.img ../apollo-effcpu-dtb
+          fi
+
+      - name: Upload Kernel Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-1-${{ matrix.type }}
+          path: |
+            apollo-aosp-dtbo.img
+            apollo-miui-dtbo.img
+            apollo-normal-dtb
+            apollo-effcpu-dtb
+            Image.gz
+
+  package_anykernel:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Kernel Build Original
+        uses: actions/download-artifact@v4
+        with:
+          name: kernel-1-original
+          path: kernel-1-original
+
+      - name: Download Kernel Build Modified
+        uses: actions/download-artifact@v4
+        with:
+          name: kernel-1-modified
+          path: kernel-1-modified
+
+      - name: Clone AnyKernel3
+        run: git clone --recursive --depth=1 ${{ github.event.inputs.ANYKERNEL_URL }} -b apollo AnyKernel3-1
+
+      - name: Move Kernel Files to AnyKernel3
+        run: |
+          mv kernel-1-original/* AnyKernel3-1/
+          mv kernel-1-modified/* AnyKernel3-1/
+
+      - name: Define ZIP Name
+        run: |
+          COMPILED_DATE=$(date +%Y%m%d)
+          echo "ZIP_NAME=FakeDreamer-test-${{ github.event.inputs.CODENAME }}-$COMPILED_DATE" >> $GITHUB_ENV
+
+      - name: Upload Flashable Kernel Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: |
+            AnyKernel3-1/
+            !AnyKernel3-1/.git
+            !AnyKernel3-1/.github

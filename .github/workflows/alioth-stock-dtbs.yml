@@ -66,6 +66,7 @@ jobs:
       - name: Temporarily revert GPU undervolt commit
         run: |
           cd kernel_tree
+          git fetch origin 258df82d65b1c4d13bc69a5a7ec3edc08d6d5237
           git revert 258df82d65b1c4d13bc69a5a7ec3edc08d6d5237 --no-commit
           git commit -m "Temporarily revert GPU undervolt commit for CI build"
 

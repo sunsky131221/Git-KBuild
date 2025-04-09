@@ -13,11 +13,11 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'freesia'
+        default: 'freesia-fall'
         required: true
       KERNEL_TREE_BRANCH_2:
         description: 'Kernel Tree Branch 2'
-        default: 'freesia'
+        default: 'freesia-fall'
         required: true
       CODENAME:
         description: 'Phone Codename'
@@ -62,13 +62,6 @@ jobs:
           
       - name: Checkout Kernel
         run: git clone --depth=1 $KERNEL_TREE -b $KERNEL_TREE_BRANCH kernel_tree
-
-      - name: Temporarily revert GPU undervolt commit
-        run: |
-          cd kernel_tree
-          git fetch origin 258df82d65b1c4d13bc69a5a7ec3edc08d6d5237
-          git revert 258df82d65b1c4d13bc69a5a7ec3edc08d6d5237 --no-commit
-          git commit -m "Temporarily revert GPU undervolt commit for CI build"
 
       - name: Change different battery type
         if: matrix.kernel == 1

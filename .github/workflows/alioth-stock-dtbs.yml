@@ -121,8 +121,8 @@ jobs:
           path: |
             alioth-aosp-dtbo.img
             alioth-miui-dtbo.img
-            alioth-normal-dtb
-            alioth-effcpu-dtb
+            alioth-normal-gpustk-dtb
+            alioth-effcpu-gpustk-dtb
             Image.gz
 
   package_anykernel:

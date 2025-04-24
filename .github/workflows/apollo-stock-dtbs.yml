@@ -67,7 +67,7 @@ jobs:
         run: |
           cd kernel_tree
           bash nextpatch.sh
-          git am 0001-LOS-IR.patch
+          patch -p1 -f < "0001-LOS-IR.patch"
 
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'

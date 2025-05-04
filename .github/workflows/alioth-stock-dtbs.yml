@@ -109,7 +109,6 @@ jobs:
           if [[ "${{ matrix.type }}" == "original" ]]; then
             mv out/arch/arm64/boot/dtbo.img ../alioth-stock-dtbo-aosp.img
             mv out/arch/arm64/boot/dtb.img ../alioth-normal-gpustk-dtb
-            cp out/arch/arm64/boot/Image.gz ../Image.gz
           else
             mv out/arch/arm64/boot/dtbo.img ../alioth-stock-dtbo-miui.img
             mv out/arch/arm64/boot/dtb.img ../alioth-effcpu-gpustk-dtb
@@ -124,7 +123,6 @@ jobs:
             alioth-stock-dtbo-miui.img
             alioth-normal-gpustk-dtb
             alioth-effcpu-gpustk-dtb
-            Image.gz
 
   package_anykernel:
     needs: build

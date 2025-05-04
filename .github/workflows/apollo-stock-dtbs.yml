@@ -95,7 +95,6 @@ jobs:
           if [[ "${{ matrix.type }}" == "original" ]]; then
             mv out/arch/arm64/boot/dtbo.img ../apollo-ir-dtbo.img
             mv out/arch/arm64/boot/dtb.img ../apollo-normal-gpustk-dtb
-            cp out/arch/arm64/boot/Image.gz ../Image.gz
           else
             mv out/arch/arm64/boot/dtbo.img ../apollo-miui-dtbo.img
             mv out/arch/arm64/boot/dtb.img ../apollo-effcpu-gpustk-dtb
@@ -110,7 +109,6 @@ jobs:
             apollo-miui-dtbo.img
             apollo-normal-gpustk-dtb
             apollo-effcpu-gpustk-dtb
-            Image.gz
 
   package_anykernel:
     needs: build

@@ -65,7 +65,10 @@ jobs:
           if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
             sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/apollo_defconfig
           fi
-      
+      - name: Apply Patches
+        run: |
+          cd kernel_tree
+          bash nextpatch.sh
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'
         run: |

@@ -13,15 +13,7 @@ on:
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
-        default: 'next-main'
-        required: true
-      KERNEL_TREE_BRANCH_2:
-        description: 'Kernel Tree Branch 2'
         default: 'next-susfs'
-        required: true
-      KERNEL_TREE_BRANCH_3:
-        description: 'Kernel Tree Branch 3'
-        default: 'no-ksu'
         required: true
       CODENAME:
         description: 'Phone Codename'
@@ -40,7 +32,7 @@ jobs:
   build:
     strategy:
       matrix:
-        kernel: [1, 2, 3]
+        kernel: [1]
         type: [original, modified]
     runs-on: ubuntu-latest
     env:
@@ -62,8 +54,6 @@ jobs:
           echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
           case "${{ matrix.kernel }}" in
             1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
-            2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
-            3) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
           esac
          
       - name: Checkout Kernel
@@ -76,11 +66,6 @@ jobs:
             sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/apollo_defconfig
           fi
       
-      - name: Apply Patches (Skip for Kernel 3)
-        if: matrix.kernel != 3
-        run: |
-          cd kernel_tree
-          bash nextpatch.sh
       - name: Apply Modifications (if modified build)
         if: matrix.type == 'modified'
         run: |
@@ -128,7 +113,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        kernel: [1, 2, 3]
+        kernel: [1]
     runs-on: ubuntu-latest
 
     steps:

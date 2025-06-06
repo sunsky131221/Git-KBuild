@@ -9,11 +9,19 @@ on:
         required: false
       KERNEL_TREE_1:
         description: 'Kernel Tree 1'
-        default: 'https://github.com/sunsky131221/kernel_sm8250'
+        default: 'https://github.com/re-noroi/kernel_sm8250'
         required: true
       KERNEL_TREE_BRANCH_1:
         description: 'Kernel Tree Branch 1'
+        default: 'next-main'
+        required: true
+      KERNEL_TREE_BRANCH_2:
+        description: 'Kernel Tree Branch 2'
         default: 'next-susfs'
+        required: true
+      KERNEL_TREE_BRANCH_3:
+        description: 'Kernel Tree Branch 3'
+        default: 'no-ksu'
         required: true
       CODENAME:
         description: 'Phone Codename'
@@ -27,12 +35,20 @@ on:
         description: 'Custom Kernel Version'
         default: '-FakeDreamer'
         required: false
+      CUSTOM_USER:
+        description: 'KBUILD_BUILD_USER'
+        default: 'renoroi'
+        required: false
+      CUSTOM_HOST:
+        description: 'KBUILD_BUILD_HOST'
+        default: 'dreamstate'
+        required: false
 
 jobs:
   build:
     strategy:
       matrix:
-        kernel: [1]
+        kernel: [1, 2, 3]
         type: [original, modified]
     runs-on: ubuntu-latest
     env:
@@ -54,6 +70,8 @@ jobs:
           echo "KERNEL_TREE=${{ github.event.inputs.KERNEL_TREE_1 }}" >> $GITHUB_ENV
           case "${{ matrix.kernel }}" in
             1) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_1 }}" >> $GITHUB_ENV ;;
+            2) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_2 }}" >> $GITHUB_ENV ;;
+            3) echo "KERNEL_TREE_BRANCH=${{ github.event.inputs.KERNEL_TREE_BRANCH_3 }}" >> $GITHUB_ENV ;;
           esac
          
       - name: Checkout Kernel
@@ -62,11 +80,12 @@ jobs:
       - name: Kernel Version
         run: |
           cd kernel_tree
-          wget https://raw.githubusercontent.com/sunsky131221/Git-KBuild/refs/heads/main/apollo_defconfig -O arch/arm64/configs/vendor/apollo_defconfig
           if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
             sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/apollo_defconfig
           fi
-      - name: Apply Patches
+      
+      - name: Apply Patches (Skip for Kernel 3)
+        if: matrix.kernel != 3
         run: |
           cd kernel_tree
           bash nextpatch.sh
@@ -87,9 +106,9 @@ jobs:
           export PATH="$(pwd)/clang/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=ARM64
-          export KBUILD_BUILD_USER="renoroi"
-          export KBUILD_BUILD_HOST="dreamstate"
-          export KBUILD_BUILD_TIMESTAMP="$(TZ=UTC-7 date)"
+          export KBUILD_BUILD_USER="${{ github.event.inputs.CUSTOM_USER }}"
+          export KBUILD_BUILD_HOST="${{ github.event.inputs.CUSTOM_HOST }}"
+          export KBUILD_BUILD_TIMESTAMP="$(TZ=UTC+8 date)"
           cd kernel_tree
           make O=out vendor/apollo_defconfig
           make O=out CC=clang -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1
@@ -117,7 +136,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        kernel: [1]
+        kernel: [1, 2, 3]
     runs-on: ubuntu-latest
 
     steps:

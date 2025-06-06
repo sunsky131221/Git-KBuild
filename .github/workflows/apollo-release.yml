@@ -62,6 +62,7 @@ jobs:
       - name: Kernel Version
         run: |
           cd kernel_tree
+          wget https://raw.githubusercontent.com/sunsky131221/Git-KBuild/refs/heads/main/apollo_defconfig -O arch/arm64/configs/vendor/apollo_defconfig
           if [[ "${{ github.event.inputs.CUSTOM_SED }}" != "-FakeDreamer" ]]; then
             sed -i -e 's/CONFIG_LOCALVERSION="-FakeDreamer"/CONFIG_LOCALVERSION="${{ github.event.inputs.CUSTOM_SED }}"/' arch/arm64/configs/vendor/apollo_defconfig
           fi
